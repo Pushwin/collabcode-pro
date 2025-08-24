@@ -3,97 +3,242 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CollabCode</title>
+  <title>CollabCode Pro</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs/loader.js"></script>
   <style>
     body { font-family: 'Inter', sans-serif; }
-    .editor-container { height: 60vh; width: 100%; }
-    .output-container {
-      background-color: #1e1e1e;
-      color: #d4d4d4;
-      padding: 0.75rem;
-      font-family: 'Courier New', monospace;
-      white-space: pre-wrap;
-      overflow-y: auto;
-      height: 120px;
-      border-top: 1px solid #374151;
+    .editor-container { height: 50vh; width: 100%; }
+    .output-container { 
+      background-color: #1e1e1e; 
+      color: #d4d4d4; 
+      padding: 0.75rem; 
+      font-family: 'Courier New', monospace; 
+      white-space: pre-wrap; 
+      overflow-y: auto; 
+      height: 200px; 
+      border-top: 1px solid #374151; 
+    }
+    .language-select {
+      background-color: #374151;
+      border: 1px solid #4B5563;
+      color: #D1D5DB;
     }
   </style>
 </head>
 <body class="bg-gray-900 text-gray-200">
   <div class="flex h-screen p-4 space-x-4">
-    <!-- My Editor -->
+    <!-- My Editor Panel -->
     <div class="flex-1 flex flex-col rounded-lg shadow-2xl overflow-hidden bg-gray-800">
-      <h2 class="text-xl p-4 font-bold border-b border-gray-700">My Code</h2>
+      <div class="flex justify-between items-center p-4 border-b border-gray-700">
+        <h2 class="text-xl font-bold">My Code</h2>
+        <select id="language-my" class="language-select px-3 py-1 rounded">
+          <option value="java">Java</option>
+          <option value="python">Python</option>
+          <option value="cpp">C++</option>
+          <option value="javascript">JavaScript</option>
+          <option value="c">C</option>
+        </select>
+      </div>
       <div id="editor-my" class="editor-container"></div>
       <div class="p-4 border-t border-gray-700 flex justify-between items-center">
-        <button id="compile-my" class="px-6 py-2 bg-green-600 rounded-full hover:bg-green-700 transition-colors">Compile & Run</button>
-        <div class="flex items-center space-x-2">
-          <span class="text-sm">Cursor: <span id="cursor-my">0:0</span></span>
-          <span class="text-sm">Words: <span id="word-count-my">0</span></span>
+        <button id="compile-my" class="px-6 py-2 bg-green-600 rounded-full hover:bg-green-700 transition-colors">
+          ▶️ Run Code
+        </button>
+        <div class="flex items-center space-x-4">
+          <span class="text-sm">Status: <span id="status-my" class="text-green-400">Ready</span></span>
+          <span class="text-sm">Lines: <span id="line-count-my">0</span></span>
         </div>
       </div>
-      <div id="output-my" class="output-container">Output will appear here...</div>
+      <div id="output-my" class="output-container">Click "Run Code" to see output...</div>
     </div>
 
-    <!-- Friend's Editor -->
+    <!-- Friend's Editor Panel -->
     <div class="flex-1 flex flex-col rounded-lg shadow-2xl overflow-hidden bg-gray-800">
-      <h2 class="text-xl p-4 font-bold border-b border-gray-700">Friend's Code</h2>
+      <div class="flex justify-between items-center p-4 border-b border-gray-700">
+        <h2 class="text-xl font-bold">Friend's Code</h2>
+        <select id="language-friend" class="language-select px-3 py-1 rounded">
+          <option value="java">Java</option>
+          <option value="python">Python</option>
+          <option value="cpp">C++</option>
+          <option value="javascript">JavaScript</option>
+          <option value="c">C</option>
+        </select>
+      </div>
       <div id="editor-friend" class="editor-container"></div>
       <div class="p-4 border-t border-gray-700 flex justify-between items-center">
-        <button id="compile-friend" class="px-6 py-2 bg-green-600 rounded-full hover:bg-green-700 transition-colors">Compile & Run</button>
-        <div class="flex items-center space-x-2">
-          <span class="text-sm">Cursor: <span id="cursor-friend">0:0</span></span>
-          <span class="text-sm">Words: <span id="word-count-friend">0</span></span>
+        <button id="compile-friend" class="px-6 py-2 bg-green-600 rounded-full hover:bg-green-700 transition-colors">
+          ▶️ Run Code
+        </button>
+        <div class="flex items-center space-x-4">
+          <span class="text-sm">Status: <span id="status-friend" class="text-green-400">Ready</span></span>
+          <span class="text-sm">Lines: <span id="line-count-friend">0</span></span>
         </div>
       </div>
-      <div id="output-friend" class="output-container">Output will appear here...</div>
+      <div id="output-friend" class="output-container">Click "Run Code" to see output...</div>
     </div>
   </div>
 
   <script>
     require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs' } });
     require(['vs/editor/editor.main'], function () {
-      const myEditor = monaco.editor.create(document.getElementById('editor-my'), {
-        value: `public class Main {
-  public static void main(String[] args) {
-    System.out.println("Hello, I am a collaborative coder!");
-  }
+      
+      // Code templates for different languages
+      const codeTemplates = {
+        java: `public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, Java World!");
+        // Your code here
+    }
 }`,
+        python: `print("Hello, Python World!")
+# Your code here`,
+        cpp: `#include <iostream>
+using namespace std;
+
+int main() {
+    cout << "Hello, C++ World!" << endl;
+    // Your code here
+    return 0;
+}`,
+        javascript: `console.log("Hello, JavaScript World!");
+// Your code here`,
+        c: `#include <stdio.h>
+
+int main() {
+    printf("Hello, C World!\\n");
+    // Your code here
+    return 0;
+}`
+      };
+
+      // Language configurations for Monaco Editor
+      const languageConfigs = {
+        java: 'java',
+        python: 'python',
+        cpp: 'cpp',
+        javascript: 'javascript',
+        c: 'c'
+      };
+
+      // Create editors
+      const myEditor = monaco.editor.create(document.getElementById('editor-my'), {
+        value: codeTemplates.java,
         language: 'java',
         theme: 'vs-dark',
-        automaticLayout: true
+        automaticLayout: true,
+        fontSize: 14,
+        lineNumbers: 'on',
+        minimap: { enabled: false }
       });
 
       const friendEditor = monaco.editor.create(document.getElementById('editor-friend'), {
-        value: `// Your friend's code here`,
+        value: codeTemplates.java,
         language: 'java',
         theme: 'vs-dark',
-        automaticLayout: true
+        automaticLayout: true,
+        fontSize: 14,
+        lineNumbers: 'on',
+        minimap: { enabled: false }
       });
 
+      // Update line count
+      function updateLineCount(editor, counterId) {
+        const lineCount = editor.getModel().getLineCount();
+        document.getElementById(counterId).textContent = lineCount;
+      }
+
+      // Language change handlers
+      document.getElementById('language-my').addEventListener('change', (e) => {
+        const lang = e.target.value;
+        myEditor.setValue(codeTemplates[lang]);
+        monaco.editor.setModelLanguage(myEditor.getModel(), languageConfigs[lang]);
+      });
+
+      document.getElementById('language-friend').addEventListener('change', (e) => {
+        const lang = e.target.value;
+        friendEditor.setValue(codeTemplates[lang]);
+        monaco.editor.setModelLanguage(friendEditor.getModel(), languageConfigs[lang]);
+      });
+
+      // Update line counts on content change
+      myEditor.onDidChangeModelContent(() => updateLineCount(myEditor, 'line-count-my'));
+      friendEditor.onDidChangeModelContent(() => updateLineCount(friendEditor, 'line-count-friend'));
+
+      // Initial line count
+      updateLineCount(myEditor, 'line-count-my');
+      updateLineCount(friendEditor, 'line-count-friend');
+
+      // Compile and run function
+      async function compileAndRun(code, language, who) {
+        const outputBox = document.getElementById(`output-${who}`);
+        const statusSpan = document.getElementById(`status-${who}`);
+        const button = document.getElementById(`compile-${who}`);
+        
+        // Update UI
+        outputBox.textContent = "⏳ Compiling and running...";
+        statusSpan.textContent = "Running";
+        statusSpan.className = "text-yellow-400";
+        button.disabled = true;
+        button.textContent = "⏳ Running...";
+
+        try {
+          const response = await fetch("/compile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code, language })
+          });
+
+          const data = await response.json();
+          
+          // Format output
+          let output = data.output || "No output";
+          if (data.time) output += `\n\n⏱️ Execution time: ${data.time}s`;
+          if (data.memory) output += `\n💾 Memory used: ${data.memory} KB`;
+          if (data.status && data.status !== "Accepted") output += `\n📊 Status: ${data.status}`;
+          
+          outputBox.textContent = output;
+          
+          // Update status
+          if (data.status === "Accepted" || output.includes("Hello")) {
+            statusSpan.textContent = "Success";
+            statusSpan.className = "text-green-400";
+          } else {
+            statusSpan.textContent = "Error";
+            statusSpan.className = "text-red-400";
+          }
+
+        } catch (error) {
+          outputBox.textContent = `❌ Network Error: ${error.message}`;
+          statusSpan.textContent = "Error";
+          statusSpan.className = "text-red-400";
+        } finally {
+          button.disabled = false;
+          button.textContent = "▶️ Run Code";
+        }
+      }
+
+      // Button event listeners
       document.getElementById('compile-my').addEventListener('click', () => {
-        compileAndRun(myEditor.getValue(), "my");
+        const code = myEditor.getValue();
+        const language = document.getElementById('language-my').value;
+        compileAndRun(code, language, "my");
       });
 
       document.getElementById('compile-friend').addEventListener('click', () => {
-        compileAndRun(friendEditor.getValue(), "friend");
+        const code = friendEditor.getValue();
+        const language = document.getElementById('language-friend').value;
+        compileAndRun(code, language, "friend");
       });
 
-      function compileAndRun(code, who) {
-        const outputBox = document.getElementById("output-" + who);
-        outputBox.textContent = "⏳ Compiling...";
+      // Keyboard shortcuts
+      myEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+        document.getElementById('compile-my').click();
+      });
 
-        fetch("/compile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code })
-        })
-        .then(res => res.json())
-        .then(data => outputBox.textContent = data.output || "No output")
-        .catch(err => outputBox.textContent = "❌ Error: " + err.message);
-      }
+      friendEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+        document.getElementById('compile-friend').click();
+      });
     });
   </script>
 </body>
